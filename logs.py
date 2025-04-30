@@ -1,39 +1,36 @@
 import streamlit as st
 import numpy as np
-import matplotlib.pyplot as plt
 
-st.title("Wykresy: funkcja wykładnicza i logarytmiczna")
+st.title("Zrozum definicję logarytmu")
 
-# Suwak do wyboru wartości a
-a = st.slider('Wybierz wartość a', 2, 10, 2)
+# Wybór trybu zmiany parametru
+mode = st.radio(
+    "Który parametr chcesz zmieniać?",
+    ("Podstawa logarytmu (a)", "Argument logarytmu (b)")
+)
 
-# Dane do wykresu funkcji wykładniczej y = a^x
-x_exp = np.linspace(0, 6, 100)
-y_exp = a ** x_exp
-x_points_exp = np.arange(0, 7)
-y_points_exp = a ** x_points_exp
+# Ustawienia domyślne
+default_a = 2
+default_b = 8
 
-# Dane do wykresu funkcji logarytmicznej y = log_a(x)
-x_log = np.linspace(1, a**6, 100)
-y_log = np.log(x_log) / np.log(a)
-x_points_log = a ** np.arange(0, 7)
-y_points_log = np.log(x_points_log) / np.log(a)
+if mode == "Podstawa logarytmu (a)":
+    a = st.slider("Wybierz podstawę logarytmu (a)", 2, 10, default_a)
+    b = st.number_input("Podaj argument logarytmu (b)", min_value=1.0, value=float(default_b), step=1.0)
+    # c = log_a(b)
+    c = np.log(b) / np.log(a)
+elif mode == "Argument logarytmu (b)":
+    a = st.slider("Wybierz podstawę logarytmu (a)", 2, 10, default_a)
+    c = st.number_input("Podaj wartość logarytmu (c)", min_value=0.0, value=3.0, step=1.0)
+    # b = a^c
+    b = a ** c
 
-# Rysowanie wykresów
-fig, ax = plt.subplots()
+st.markdown(f"### log<sub>{a}</sub>({b:.4g}) = {c:.4g}")
 
-# Wykres funkcji wykładniczej
-ax.plot(x_exp, y_exp, label=f'y = {a}^x', color='blue')
-ax.scatter(x_points_exp, y_points_exp, color='blue', zorder=5, label='Punkty y=a^x dla x=0..6')
+st.info(f"Ponieważ {a} do potęgi {c:.4g} równa się {b:.4g}.")
 
-# Wykres funkcji logarytmicznej
-ax.plot(x_log, y_log, label=f'y = log_{a}(x)', color='green')
-ax.scatter(x_points_log, y_points_log, color='green', zorder=5, label='Punkty y=log_a(x) dla x=1,a^1,...,a^6')
+# Dodatkowe wyjaśnienie
+st.write("""
+Definicja logarytmu:
+> logarytm przy podstawie **a** z liczby **b** to taka liczba **c**, że **a<sup>c</sup> = b**.
+""")
 
-# Opisy osi i legenda
-ax.set_xlabel('x')
-ax.set_ylabel('y')
-ax.legend()
-ax.grid(True)
-
-st.pyplot(fig)
