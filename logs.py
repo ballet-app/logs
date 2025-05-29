@@ -1,5 +1,8 @@
 import streamlit as st
 import math
+import numpy as np
+import io
+from scipy.io import wavfile
 
 st.title("Decybele i logarytmy — wizualizacja skali dźwięku")
 
@@ -66,4 +69,47 @@ if I1 > 0 and I2 > 0:
 
 else:
     st.error("Obie wartości natężenia muszą być większe od zera.")
+
+
+def generate_tone(db_level, duration=1.0, freq=440, sample_rate=44100):
+    """
+    Generuje dźwięk sinusoidalny o głośności proporcjonalnej do db_level (dB).
+    Zakładamy poziom referencyjny 0 dB jako maksymalną amplitudę.
+    """
+    # Przelicz decybele na liniową amplitudę (zakładamy 0 dB jako amplituda 1.0)
+    amplitude = 10 ** (db_level / 20)  # 20 bo amplituda (ciśnienie), a nie moc
+    # Skalujemy, by nie przekroczyć maksymalnej wartości 1.0 (normalizacja)
+    max_amplitude = 1.0
+    norm_amplitude = min(amplitude / (10 ** (120 / 20)), max_amplitude)
+
+    t = np.linspace(0, duration, int(sample_rate * duration), False)
+    tone = norm_amplitude * np.sin(2 * np.pi * freq * t)
+
+    # Konwertujemy na 16-bitowe wartości całkowite
+    audio = np.int16(tone * 32767)
+
+    # Zapis do bufora bytes
+    buf = io.BytesIO()
+    wavfile.write(buf, sample_rate, audio)
+    return buf.getvalue()
+
+# W sekcji porównania dźwięków:
+
+if I1 > 0 and I2 > 0:
+    L1 = 10 * math.log10(I1 / I0)
+    L2 = 10 * math.log10(I2 / I0)
+    diff = L1 - L2
+
+    # ... (poprzedni kod wyświetlania wyników i pasków)
+
+    st.markdown("### Odtwarzanie dźwięków")
+
+    audio1 = generate_tone(L1)
+    audio2 = generate_tone(L2)
+
+    st.audio(audio1, format="audio/wav", start_time=0, sample_rate=44100)
+    st.write("Odtwarzanie dźwięku I₁")
+
+    st.audio(audio2, format="audio/wav", start_time=0, sample_rate=44100)
+    st.write("Odtwarzanie dźwięku I₂")
 
